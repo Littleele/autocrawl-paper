@@ -147,6 +147,7 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
             model_name=model_name,
             base_url=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
             api_key=os.environ.get("OPENAI_API_KEY", ""),
+            reasoning_effort=os.environ.get("REASONING_EFFORT", ""),
         )
     ).with_structured_output(Structure, method="function_calling")
 

@@ -30,6 +30,56 @@ class BuildChatOpenAIKwargsTests(unittest.TestCase):
             kwargs["extra_body"],
         )
 
+    def test_reasoning_effort_is_only_sent_when_configured(self):
+        """Catches sending `reasoning_effort` to models that reject the parameter."""
+        without = build_chat_openai_kwargs(
+            model_name="gpt-4o-mini",
+            base_url="https://api.openai.com/v1",
+            api_key="sk-test-key",
+        )
+        self.assertNotIn("reasoning_effort", without)
+
+        blank = build_chat_openai_kwargs(
+            model_name="gpt-4o-mini",
+            base_url="https://api.openai.com/v1",
+            api_key="sk-test-key",
+            reasoning_effort="   ",
+        )
+        self.assertNotIn("reasoning_effort", blank)
+
+    def test_reasoning_effort_is_forwarded_for_reasoning_models(self):
+        """Catches dropping the option that lets a reasoning model accept function tools."""
+        kwargs = build_chat_openai_kwargs(
+            model_name="gpt-5.6-luna",
+            base_url="https://api.openai.com/v1",
+            api_key="sk-test-key",
+            reasoning_effort=" low ",
+        )
+        self.assertEqual("low", kwargs["reasoning_effort"])
+        self.assertTrue(kwargs["use_responses_api"])
+
+    def test_effort_none_stays_on_chat_completions(self):
+        """Catches needlessly switching endpoints when reasoning is disabled anyway."""
+        kwargs = build_chat_openai_kwargs(
+            model_name="gpt-5.6-luna",
+            base_url="https://api.openai.com/v1",
+            api_key="sk-test-key",
+            reasoning_effort="none",
+        )
+        self.assertEqual("none", kwargs["reasoning_effort"])
+        self.assertNotIn("use_responses_api", kwargs)
+
+    def test_non_openai_host_never_switches_to_responses_api(self):
+        """Catches sending OpenAI-only endpoint selection to a compatible-API provider."""
+        kwargs = build_chat_openai_kwargs(
+            model_name="deepseek-reasoner",
+            base_url="https://api.deepseek.com/v1",
+            api_key="sk-test-key",
+            reasoning_effort="medium",
+        )
+        self.assertEqual("medium", kwargs["reasoning_effort"])
+        self.assertNotIn("use_responses_api", kwargs)
+
     def test_processing_error_is_reported_after_a_batch(self):
         """Catches swallowing authentication failures and publishing fallback summaries."""
         with self.assertRaisesRegex(RuntimeError, r"2 paper\(s\) failed"):
