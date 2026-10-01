@@ -4,3 +4,5 @@
 2026-09-29_AI_enhanced_English.jsonl
 2026-09-30.jsonl
 2026-09-30_AI_enhanced_English.jsonl
+2026-10-01.jsonl
+2026-10-01_AI_enhanced_English.jsonl
